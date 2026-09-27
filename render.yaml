@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: jobpilot-backend
+    env: python
+    buildCommand: "pip install -r backend/requirements.txt && python -m spacy download en_core_web_sm"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobpilot-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_DEMO_DATA
+        value: "true"
+
+databases:
+  - name: jobpilot-db
+    databaseName: jobpilot
+    user: jobpilot_user
