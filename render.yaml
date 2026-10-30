@@ -3,9 +3,12 @@ services:
     name: jobpilot-backend
     env: python
     plan: free
-    buildCommand: "pip install -r backend/requirements.txt && python -m spacy download en_core_web_sm"
-    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    rootDir: backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && python -m spacy download en_core_web_sm"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
@@ -13,7 +16,8 @@ services:
       - key: CORS_ORIGINS
         sync: false
       - key: LLM_PROVIDER
-        value: "local"
+        value: "gemini"
+      - key: GEMINI_API_KEY
+        sync: false
       - key: SEED_DEMO_DATA
         value: "false"
-
