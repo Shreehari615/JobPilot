@@ -35,7 +35,36 @@ def _send_email(to: str, subject: str, html_body: str, text_body: str) -> None:
     """Send email via Resend API (HTTPS port 443) or fallback to SMTP."""
     import httpx
 
-    # 1. Try Resend API (HTTPS port 443 - works on Render without firewall blocks)
+    # 1. Try Brevo API (HTTPS port 443 - free 300 emails/day to ANY recipient without custom domain)
+    brevo_key = (settings.BREVO_API_KEY or "").strip()
+    if brevo_key:
+        try:
+            sender_email = (settings.BREVO_SENDER or settings.EMAIL_HOST_USER or "jobpilotai@gmail.com").strip()
+            resp = httpx.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={
+                    "api-key": brevo_key,
+                    "Content-Type": "application/json",
+                    "accept": "application/json",
+                },
+                json={
+                    "sender": {"name": "JobPilot AI", "email": sender_email},
+                    "to": [{"email": to}],
+                    "subject": subject,
+                    "htmlContent": html_body,
+                    "textContent": text_body,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201):
+                logger.info(f"Email sent successfully to {to} via Brevo HTTPS API")
+                return
+            else:
+                logger.warning(f"Brevo API returned status {resp.status_code}: {resp.text}")
+        except Exception as exc:
+            logger.warning(f"Failed to send email to {to} via Brevo: {exc}")
+
+    # 2. Try Resend API (HTTPS port 443)
     resend_key = (settings.RESEND_API_KEY or "").strip()
     if resend_key:
         try:

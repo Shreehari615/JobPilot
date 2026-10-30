@@ -41,9 +41,11 @@ class Settings(BaseSettings):
             return [x.strip() for x in v.split(",") if x.strip()]
         return v
 
-    # ── Email / SMTP & Resend ──────────────────────────────────────────
+    # ── Email / Resend / Brevo / SMTP ──────────────────────────────────
     RESEND_API_KEY: str = ""
     RESEND_FROM: str = "JobPilot AI <onboarding@resend.dev>"
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER: str = ""
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
     EMAIL_USE_TLS: bool = True
