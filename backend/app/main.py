@@ -107,10 +107,11 @@ if os.path.exists(settings.UPLOAD_DIR):
 @app.get("/api/v1/health", tags=["Health"])
 def health_check():
     """System health check endpoint."""
+    from app.services.llm_service import llm_service
     return {
         "status": "healthy",
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "embedding_model": settings.EMBEDDING_MODEL,
-        "llm_provider": settings.LLM_PROVIDER,
+        "llm": llm_service.get_status(),
     }

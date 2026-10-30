@@ -55,9 +55,12 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads/resumes"
 
     # ── AI / LLM ──────────────────────────────────────────────────────
-    LLM_PROVIDER: str = "local"  # local | openai | gemini
+    LLM_PROVIDER: str = "auto"  # auto | gemini | openai | local
+    LLM_AUTO_FALLBACK: bool = True
     OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o-mini"
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.8-flash"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # ── Job Source APIs ───────────────────────────────────────────────
