@@ -47,7 +47,7 @@ def list_jobs(
     salary_min: Optional[int] = Query(None, ge=0),
     salary_max: Optional[int] = Query(None, ge=0),
     skills: Optional[str] = Query(None, description="Comma-separated skill names"),
-    sort_by: str = Query("posted_date", regex="^(posted_date|salary)$"),
+    sort_by: str = Query("posted_date", pattern="^(posted_date|salary)$"),
     real_only: Optional[bool] = Query(None, description="Filter only real market jobs"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
