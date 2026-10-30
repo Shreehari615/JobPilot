@@ -21,3 +21,7 @@ services:
         sync: false
       - key: SEED_DEMO_DATA
         value: "false"
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER
+        value: "bhatsv160@gmail.com"

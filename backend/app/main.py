@@ -149,4 +149,8 @@ def health_check():
         "version": settings.APP_VERSION,
         "embedding_model": settings.EMBEDDING_MODEL,
         "llm": llm_service.get_status(),
+        "email": {
+            "brevo_active": bool(settings.BREVO_API_KEY),
+            "sender": settings.BREVO_SENDER,
+        },
     }
