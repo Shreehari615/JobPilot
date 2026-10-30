@@ -32,8 +32,38 @@ def generate_reset_token(length: int = 48) -> str:
 # ── Email sending ─────────────────────────────────────────────────────────────
 
 def _send_email(to: str, subject: str, html_body: str, text_body: str) -> None:
-    """Low-level helper that sends email via configured SMTP."""
-    # Check if credentials are missing or default placeholders
+    """Send email via Resend API (HTTPS port 443) or fallback to SMTP."""
+    import httpx
+
+    # 1. Try Resend API (HTTPS port 443 - works on Render without firewall blocks)
+    resend_key = (settings.RESEND_API_KEY or "").strip()
+    if resend_key:
+        try:
+            from_address = settings.RESEND_FROM or "JobPilot AI <onboarding@resend.dev>"
+            resp = httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": from_address,
+                    "to": [to],
+                    "subject": subject,
+                    "html": html_body,
+                    "text": text_body,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201):
+                logger.info(f"Email sent successfully to {to} via Resend HTTPS API")
+                return
+            else:
+                logger.warning(f"Resend API returned status {resp.status_code}: {resp.text}")
+        except Exception as exc:
+            logger.warning(f"Failed to send email to {to} via Resend: {exc}")
+
+    # 2. Fallback to standard SMTP
     if (
         not settings.EMAIL_HOST_USER
         or not settings.EMAIL_HOST_PASSWORD

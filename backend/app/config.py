@@ -41,7 +41,9 @@ class Settings(BaseSettings):
             return [x.strip() for x in v.split(",") if x.strip()]
         return v
 
-    # ── Email / SMTP ───────────────────────────────────────────────────
+    # ── Email / SMTP & Resend ──────────────────────────────────────────
+    RESEND_API_KEY: str = ""
+    RESEND_FROM: str = "JobPilot AI <onboarding@resend.dev>"
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
     EMAIL_USE_TLS: bool = True
