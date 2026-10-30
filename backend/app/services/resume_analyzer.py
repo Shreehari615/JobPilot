@@ -38,6 +38,10 @@ def _get_nlp():
 
 # ── Section header patterns ───────────────────────────────────────────
 SECTION_PATTERNS = {
+    "summary": re.compile(
+        r"(?i)^(career\s+objective|professional\s+summary|career\s+summary|executive\s+summary|summary|objective|profile|about\s+me)\b",
+        re.IGNORECASE,
+    ),
     "skills": re.compile(
         r"(?i)(technical\s+)?skills?|competencies|technologies|tech\s+stack|tools?\s+&\s+technologies?",
         re.IGNORECASE,
@@ -47,26 +51,24 @@ SECTION_PATTERNS = {
         re.IGNORECASE,
     ),
     "experience": re.compile(
-        r"(?i)experience|employment|work\s+history|professional\s+background|career",
+        r"(?i)^(work\s+experience|professional\s+experience|employment\s+history|work\s+history|professional\s+background|work\s+background|experience|employment|career\s+history)\b",
         re.IGNORECASE,
     ),
     "projects": re.compile(r"(?i)projects?|portfolio|work\s+samples?", re.IGNORECASE),
+    "interests": re.compile(r"(?i)^(interests?|hobbies|extracurricular(\s+activities)?|activities)\b", re.IGNORECASE),
     "certifications": re.compile(
         r"(?i)certifications?|certificates?|licenses?|credentials?",
         re.IGNORECASE,
     ),
-    "summary": re.compile(
-        r"(?i)summary|objective|profile|about\s+me|career\s+objective",
-        re.IGNORECASE,
-    ),
 }
+
 
 # ── Regex patterns ────────────────────────────────────────────────────
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 PHONE_RE = re.compile(
     r"(?:\+91[\s\-]?)?[789]\d{9}|(?:\+\d{1,3}[\s\-]?)?\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}"
 )
-YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 DATE_RANGE_RE = re.compile(
     r"(?P<start>(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\w]*\.?\s*\d{4}|"
     r"\d{4})\s*[-–—to]+\s*(?P<end>(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\w]*\.?\s*\d{4}|"
@@ -77,11 +79,11 @@ DATE_RANGE_RE = re.compile(
 DEGREE_PATTERNS = {
     "PhD": re.compile(r"\b(ph\.?d|doctor\s+of\s+philosophy)\b", re.IGNORECASE),
     "MBA": re.compile(r"\b(m\.?b\.?a|master\s+of\s+business)\b", re.IGNORECASE),
-    "MCA": re.compile(r"\b(m\.?c\.?a|master\s+of\s+computer\s+application)\b", re.IGNORECASE),
+    "MCA": re.compile(r"\b(m\.?c\.?a|master\s+of\s+computer\s+application[s]?)\b", re.IGNORECASE),
     "MTech": re.compile(r"\b(m\.?\s*tech|master\s+of\s+technology)\b", re.IGNORECASE),
     "MSc": re.compile(r"\b(m\.?\s*sc|master\s+of\s+science)\b", re.IGNORECASE),
     "ME": re.compile(r"\b(m\.?\s*e\.?|master\s+of\s+engineering)\b", re.IGNORECASE),
-    "BCA": re.compile(r"\b(b\.?c\.?a|bachelor\s+of\s+computer\s+application)\b", re.IGNORECASE),
+    "BCA": re.compile(r"\b(b\.?c\.?a|bachelor\s+of\s+computer\s+application[s]?)\b", re.IGNORECASE),
     "BTech": re.compile(r"\b(b\.?\s*tech|bachelor\s+of\s+technology)\b", re.IGNORECASE),
     "BE": re.compile(r"\b(b\.?\s*e\.?|bachelor\s+of\s+engineering)\b", re.IGNORECASE),
     "BSc": re.compile(r"\b(b\.?\s*sc|bachelor\s+of\s+science)\b", re.IGNORECASE),
@@ -89,14 +91,14 @@ DEGREE_PATTERNS = {
     "BCom": re.compile(r"\b(b\.?\s*com|bachelor\s+of\s+commerce)\b", re.IGNORECASE),
     "BBA": re.compile(r"\b(b\.?b\.?a|bachelor\s+of\s+business)\b", re.IGNORECASE),
     "Diploma": re.compile(r"\b(diploma|polytechnic)\b", re.IGNORECASE),
-    "12th": re.compile(r"\b(12th|hsc|higher\s+secondary|intermediate|class\s+xii)\b", re.IGNORECASE),
-    "10th": re.compile(r"\b(10th|ssc|secondary|class\s+x)\b", re.IGNORECASE),
+    "PUC": re.compile(r"\b(puc|12th|class\s+xii|higher\s+secondary|intermediate|pre-university|plus\s+two)\b", re.IGNORECASE),
+    "SSLC": re.compile(r"\b(sslc|10th|class\s+x|secondary|matriculation)\b", re.IGNORECASE),
 }
 
 DEGREE_LEVEL = {
     "PhD": 7, "MBA": 6, "MTech": 6, "ME": 6, "MSc": 6, "MCA": 6,
     "BTech": 5, "BE": 5, "BSc": 5, "BCA": 5, "BA": 5, "BCom": 5, "BBA": 5,
-    "Diploma": 3, "12th": 2, "10th": 1,
+    "Diploma": 3, "PUC": 2, "SSLC": 1,
 }
 
 
@@ -110,7 +112,7 @@ class CandidateProfile:
     education: List[Dict[str, Any]] = field(default_factory=list)
     experience: List[Dict[str, Any]] = field(default_factory=list)
     certifications: List[str] = field(default_factory=list)
-    projects: List[str] = field(default_factory=list)
+    projects: List[Any] = field(default_factory=list)
     job_titles: List[str] = field(default_factory=list)
     total_experience_years: float = 0.0
     highest_degree: Optional[str] = None
@@ -182,9 +184,13 @@ def extract_text(file_path: str, file_type: str) -> str:
 # ── Text Cleaning ─────────────────────────────────────────────────────
 def clean_text(text: str) -> str:
     """Clean extracted resume text."""
-    # Normalize unicode
     import unicodedata
     text = unicodedata.normalize("NFKD", text)
+    # Convert range replacement chars (like 9095% or 2022  2025)
+    text = re.sub(r"(\d+)\s*[\ufffd\u2013\u2014]\s*(\d+)", r"\1 - \2", text)
+    # Normalize standalone bullet characters on their own lines
+    text = re.sub(r"[\ufffd\u2022\u25cf\u25aa\u25b6\xb7\u2013\u2014]\s*\n\s*", "\n• ", text)
+    text = text.replace("\ufffd", "-")
     # Remove null bytes and control chars
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", text)
     # Normalize line endings
@@ -263,45 +269,124 @@ def extract_name(text: str, header_text: str) -> Optional[str]:
     return None
 
 
-def extract_education(sections: Dict[str, str]) -> Tuple[List[Dict], Optional[str], int]:
+def extract_education(sections: Dict[str, str]) -> Tuple[List[Dict[str, Any]], Optional[str], int]:
     """
-    Extract education entries from the education section.
+    Extract structured education entries line-by-line.
     Returns: (education_list, highest_degree, degree_level)
     """
-    edu_text = sections.get("education", "") + "\n" + sections.get("header", "")
-    education = []
+    edu_text = sections.get("education", "").strip()
+    if not edu_text:
+        edu_text = sections.get("header", "")
+
+    education: List[Dict[str, Any]] = []
     highest_degree = None
     highest_level = 0
 
-    # Find degree mentions
-    all_text = "\n".join(sections.values())
-    for degree_name, pattern in DEGREE_PATTERNS.items():
-        if pattern.search(all_text):
-            level = DEGREE_LEVEL.get(degree_name, 0)
-            if level > highest_level:
-                highest_level = level
-                highest_degree = degree_name
+    lines = [l.strip() for l in edu_text.split("\n") if l.strip()]
 
-    # Extract year
-    years = YEAR_RE.findall(edu_text)
-    grad_year = max([int(y) for y in years], default=None) if years else None
+    degree_priority = [
+        ("PhD", DEGREE_PATTERNS["PhD"]),
+        ("MTech", DEGREE_PATTERNS["MTech"]),
+        ("ME", DEGREE_PATTERNS["ME"]),
+        ("MCA", DEGREE_PATTERNS["MCA"]),
+        ("MBA", DEGREE_PATTERNS["MBA"]),
+        ("MSc", DEGREE_PATTERNS["MSc"]),
+        ("BTech", DEGREE_PATTERNS["BTech"]),
+        ("BE", DEGREE_PATTERNS["BE"]),
+        ("BCA", DEGREE_PATTERNS["BCA"]),
+        ("BSc", DEGREE_PATTERNS["BSc"]),
+        ("BCom", DEGREE_PATTERNS["BCom"]),
+        ("BBA", DEGREE_PATTERNS["BBA"]),
+        ("BA", DEGREE_PATTERNS["BA"]),
+        ("Diploma", DEGREE_PATTERNS["Diploma"]),
+        ("PUC", DEGREE_PATTERNS["PUC"]),
+        ("SSLC", DEGREE_PATTERNS["SSLC"]),
+    ]
 
-    # Try to find institution names via spaCy ORG entities
-    nlp = _get_nlp()
-    institutions = []
-    if nlp and edu_text.strip():
-        doc = nlp(edu_text[:1000])
-        for ent in doc.ents:
-            if ent.label_ == "ORG":
-                institutions.append(ent.text)
+    for line in lines:
+        line_clean = line.replace("\ufffd", "-").strip()
+        matched_deg = None
+        for deg_name, deg_re in degree_priority:
+            if deg_re.search(line_clean):
+                matched_deg = deg_name
+                break
 
-    if highest_degree or institutions or grad_year:
-        education.append({
-            "degree": highest_degree,
-            "institution": institutions[0] if institutions else None,
-            "graduation_year": grad_year,
-            "field_of_study": None,
-        })
+        has_inst_kw = bool(re.search(r"(?i)\b(college|university|institute|school|academy|vidyalaya|campus)\b", line_clean))
+        if not matched_deg and not has_inst_kw:
+            # Check if this line is a continuation line containing graduation year/years for the previous degree
+            if education and not education[-1].get("graduation_year"):
+                cont_years = YEAR_RE.findall(line_clean)
+                if cont_years:
+                    education[-1]["graduation_year"] = int(cont_years[-1])
+                    education[-1]["year"] = f"{cont_years[0]}-{cont_years[1]}" if len(cont_years) >= 2 else str(cont_years[0])
+            continue
+
+        # Extract years / year range
+        years = YEAR_RE.findall(line_clean)
+        grad_year = None
+        year_str = None
+        if len(years) >= 2:
+            year_str = f"{years[0]}-{years[1]}"
+            grad_year = int(years[1])
+        elif len(years) == 1:
+            year_str = str(years[0])
+            grad_year = int(years[0])
+
+        # Extract grade / CGPA / percentage
+        grade = None
+        cgpa_m = re.search(r"(?:CGPA|Percentage|Score|Grade)\s*[:=]?\s*([\d\.]+(?:\s*%)?)", line_clean, re.IGNORECASE)
+        if cgpa_m:
+            grade = cgpa_m.group(0).strip()
+
+        # Extract institution by removing known degree, grade, years, and status
+        inst = line_clean
+        if matched_deg:
+            inst = re.sub(r"^\s*" + re.escape(matched_deg) + r"[\s,–\-:]*", "", inst, flags=re.IGNORECASE)
+        if grade:
+            inst = inst.replace(grade, "")
+        inst = re.sub(r"\b(?:19|20)\d{2}(?:\s*[-–—to]+\s*(?:19|20)\d{2})?\b", "", inst)
+        inst = re.sub(r"\([^)]*\)", "", inst)
+        inst = re.sub(r"\s*\|\s*", ", ", inst)
+        inst = re.sub(r"\s*,\s*", ", ", inst)
+        inst = inst.strip(" ,|–-")
+
+        if matched_deg or (inst and len(inst) > 3) or grad_year:
+            deg = matched_deg or ("Degree" if has_inst_kw else None)
+            education.append({
+                "degree": deg,
+                "institution": inst if len(inst) > 3 else "University / Institution",
+                "year": year_str or (str(grad_year) if grad_year else None),
+                "graduation_year": grad_year,
+                "grade": grade,
+                "field_of_study": grade or None,
+            })
+            if matched_deg:
+                level = DEGREE_LEVEL.get(matched_deg, 0)
+                if level > highest_level:
+                    highest_level = level
+                    highest_degree = matched_deg
+
+    # Fallback to global regex if line-by-line produced no results
+    if not education:
+        all_text = "\n".join(sections.values())
+        for degree_name, pattern in degree_priority:
+            if pattern.search(all_text):
+                level = DEGREE_LEVEL.get(degree_name, 0)
+                if level > highest_level:
+                    highest_level = level
+                    highest_degree = degree_name
+
+        years = YEAR_RE.findall(edu_text or all_text)
+        grad_year = max([int(y) for y in years], default=None) if years else None
+        if highest_degree or grad_year:
+            education.append({
+                "degree": highest_degree or "Degree",
+                "institution": "University / College",
+                "year": str(grad_year) if grad_year else None,
+                "graduation_year": grad_year,
+                "grade": None,
+                "field_of_study": None,
+            })
 
     return education, highest_degree, highest_level
 
@@ -426,15 +511,134 @@ def extract_certifications(sections: Dict[str, str]) -> List[str]:
     return certs[:10]
 
 
-def extract_projects(sections: Dict[str, str]) -> List[str]:
-    """Extract project names/descriptions from projects section."""
-    proj_text = sections.get("projects", "")
-    projects = []
-    for line in proj_text.split("\n"):
-        line = line.strip().lstrip("•·-*0123456789.").strip()
-        if 5 < len(line) < 200:
-            projects.append(line)
-    return projects[:10]
+def extract_projects(sections: Dict[str, str]) -> List[Dict[str, Any]]:
+    """Extract structured projects from projects section."""
+    proj_text = sections.get("projects", "").strip()
+    if not proj_text:
+        return []
+
+    # Cut off interests / hobbies if caught in projects section
+    for marker in ["INTERESTS", "Interests", "HOBBIES", "Hobbies", "ACTIVITIES", "Activities",
+                   "EXTRA-CURRICULAR", "Extra-Curricular", "ACHIEVEMENTS", "Achievements"]:
+        if marker in proj_text:
+            proj_text = proj_text.split(marker)[0]
+
+    # Normalize standalone bullets on their own lines
+    proj_text = re.sub(r"[\ufffd\u2022\u25cf\u25aa\u25b6\xb7\u2013\u2014]\s*\n\s*", "\n• ", proj_text)
+    proj_text = proj_text.replace("\ufffd", "-")
+
+    lines = [l.strip() for l in proj_text.split("\n") if l.strip()]
+    projects: List[Dict[str, Any]] = []
+    current_proj: Optional[Dict[str, Any]] = None
+
+    def _is_project_title(line: str) -> bool:
+        """Return True only if the line looks like a project heading, not a sentence."""
+        # Explicit bullet markers → never a title
+        if line.startswith(("•", "-", "*", "–", "—")):
+            return False
+        # URL lines → never a title
+        if line.lower().startswith("http") or "www." in line.lower():
+            return False
+        # Ends with colon → strong title signal
+        if line.endswith(":"):
+            return len(line) < 120
+        # Ends with period or comma → it's a sentence / description line, not a title
+        if line.endswith((".","," ,";")):
+            return False
+        # Long lines are descriptions, not titles
+        if len(line) > 80:
+            return False
+        # Lines that start with a lowercase letter are descriptions
+        if line and line[0].islower():
+            return False
+        # Lines that look like plain sentences (verb phrases): start with common action verbs
+        action_verbs = re.compile(
+            r"^(Built|Developed|Implemented|Designed|Created|Integrated|Reduced|Improved|"
+            r"Automated|Trained|Deployed|Optimized|Managed|Led|Collaborated|Used|Worked|"
+            r"Achieved|Processed|Configured|Set\s+up|Migrated|Analyzed|Handled)\b",
+            re.IGNORECASE,
+        )
+        if action_verbs.match(line):
+            return False
+        # Word count check: titles are typically 2–9 words
+        word_count = len(line.split())
+        if word_count < 2 or word_count > 9:
+            return False
+        # Must have at least one word that is Title-cased or ALL-CAPS
+        has_title_word = any(w[0].isupper() for w in line.split() if len(w) > 1)
+        if not has_title_word:
+            return False
+        return True
+
+    for line in lines:
+        if _is_project_title(line) and len(line) > 5:
+            # Clean title (strip trailing colon, project link refs)
+            title = re.sub(r":?\s*Project\s*[Ll]ink:?.*", "", line, flags=re.IGNORECASE)
+            title = title.rstrip(":").strip()
+            if not title:
+                continue
+            current_proj = {
+                "title": title,
+                "description": "",
+                "highlights": [],
+                "skills": [],
+            }
+            projects.append(current_proj)
+        elif current_proj:
+            bullet = re.sub(r"^[•\-\*\–\—\s]+", "", line).strip()
+            if bullet:
+                current_proj["highlights"].append(bullet)
+                if not current_proj["description"]:
+                    current_proj["description"] = bullet
+                else:
+                    current_proj["description"] += " " + bullet
+        else:
+            # No current project yet — treat first non-title line as an orphan title
+            # only if it really looks like a project name (short, capitalized)
+            stripped = re.sub(r"^[•\-\*\s]+", "", line).strip()
+            if stripped and len(stripped) < 70 and stripped[0].isupper():
+                current_proj = {
+                    "title": stripped.rstrip(":"),
+                    "description": "",
+                    "highlights": [],
+                    "skills": [],
+                }
+                projects.append(current_proj)
+
+    # Remove projects that are likely mis-parsed (title reads like a sentence, without project nouns)
+    bad_title_re = re.compile(
+        r"^(Built|Developed|Implemented|Designed|Created|Integrated|Reduced|Improved|"
+        r"Automated|Trained|Deployed|Optimized|Managed|Led|Collaborated|Used|Worked|"
+        r"Achieved|Processed|Configured|Set\s+up|Migrated|Analyzed|Handled)\b",
+        re.IGNORECASE,
+    )
+    project_noun_re = re.compile(
+        r"\b(System|Platform|Application|App|Dashboard|Tracker|Detector|Detection|Recognition|Model|Pipeline|Architecture|Tool|Engine|Network|Interface|Project)\b",
+        re.IGNORECASE,
+    )
+    projects = [
+        p for p in projects
+        if not bad_title_re.match(p.get("title", "")) or project_noun_re.search(p.get("title", ""))
+    ]
+
+    # Extract technologies for each project
+    for p in projects:
+        full_text = p["title"] + " " + " ".join(p["highlights"])
+        p["skills"] = extract_skills_from_text(full_text)
+
+    # Fallback if no titles matched
+    if not projects and proj_text:
+        for line in lines[:6]:
+            c = line.lstrip("•-* ").strip()
+            if len(c) > 10:
+                projects.append({
+                    "title": c[:60],
+                    "description": c,
+                    "highlights": [],
+                    "skills": extract_skills_from_text(c),
+                })
+
+    return projects[:8]
 
 
 # ── Main Analyzer ─────────────────────────────────────────────────────
@@ -459,13 +663,20 @@ def analyze_resume(file_path: str, file_type: str) -> CandidateProfile:
     phone = extract_phone(cleaned)
     name = extract_name(cleaned, sections.get("header", cleaned[:500]))
 
-    # 5. Extract skills from all text (especially skills section + projects)
-    skill_text = (
-        sections.get("skills", "")
-        + "\n" + sections.get("projects", "")
-        + "\n" + cleaned
-    )
+    # 5. Extract skills from technical and experience sections (avoid education/contact/interests)
+    relevant_sections = [
+        sections.get("skills", ""),
+        sections.get("projects", ""),
+        sections.get("experience", ""),
+        sections.get("summary", ""),
+        sections.get("certifications", ""),
+    ]
+    skill_text = "\n".join(s for s in relevant_sections if s.strip())
+    if not skill_text.strip():
+        # Fallback if no sections were identified
+        skill_text = cleaned
     raw_skills = extract_skills_from_text(skill_text)
+
 
     # 6. Extract education
     education, highest_degree, degree_level = extract_education(sections)

@@ -90,7 +90,8 @@ app.add_middleware(
 for prefix in ["/api/v1", "/api"]:
     app.include_router(auth_router, prefix=prefix)
     app.include_router(profile_router, prefix=prefix)
-    app.include_router(resume_router, prefix=prefix)
+    app.include_router(resume_router, prefix=f"{prefix}/resume")
+    app.include_router(resume_router, prefix=f"{prefix}/resumes")
     app.include_router(jobs_router, prefix=prefix)
     app.include_router(recommendations_router, prefix=prefix)
     app.include_router(skills_router, prefix=prefix)

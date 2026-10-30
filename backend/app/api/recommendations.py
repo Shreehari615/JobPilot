@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import (
+    CandidateSkill,
     Job,
     JobSkill,
     Profile,
@@ -76,8 +77,24 @@ def get_recommendations(
 ):
     """
     Retrieve ranked job recommendations for the authenticated candidate.
-    If no recommendations exist yet, automatically computes them.
+    Requires an uploaded & parsed resume (skills present). Returns [] if no
+    resume has been processed yet so that meaningless neutral scores are never
+    shown to the user.
     """
+    # ── Resume gate ──────────────────────────────────────────────────────
+    has_skills = (
+        db.query(CandidateSkill)
+        .filter(CandidateSkill.user_id == current_user.id)
+        .first()
+    )
+    if not has_skills:
+        logger.info(
+            f"User {current_user.id} has no parsed resume skills – "
+            "returning empty recommendations."
+        )
+        return []
+    # ─────────────────────────────────────────────────────────────────────
+
     recs = (
         db.query(Recommendation)
         .filter(
@@ -129,7 +146,22 @@ def trigger_recompute(
 ):
     """
     Force recomputation of recommendations based on updated resume or profile.
+    Requires a parsed resume.
     """
+    # ── Resume gate ──────────────────────────────────────────────────────
+    has_skills = (
+        db.query(CandidateSkill)
+        .filter(CandidateSkill.user_id == current_user.id)
+        .first()
+    )
+    if not has_skills:
+        logger.info(
+            f"User {current_user.id} triggered recompute but has no parsed "
+            "resume skills – skipping."
+        )
+        return []
+    # ─────────────────────────────────────────────────────────────────────
+
     try:
         recs = compute_recommendations(user_id=current_user.id, db=db, limit=limit)
     except Exception as e:
@@ -168,10 +200,34 @@ def get_recommendation_for_job(
 ):
     """
     Get detailed match score, explanations, and skill gaps for a specific job.
+    Requires a parsed resume; returns zeroed-out scores otherwise.
     """
     job = db.query(Job).filter(Job.id == job_id, Job.is_active == True).first()
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    # ── Resume gate ──────────────────────────────────────────────────────
+    has_skills = (
+        db.query(CandidateSkill)
+        .filter(CandidateSkill.user_id == current_user.id)
+        .first()
+    )
+    if not has_skills:
+        return RecommendationDetailOut(
+            id=0,
+            job_id=job.id,
+            overall_score=0.0,
+            skill_score=0.0,
+            semantic_score=0.0,
+            experience_score=0.0,
+            education_score=0.0,
+            preference_score=0.0,
+            explanation={"resume_required": True},
+            computed_at=None,
+            skill_gaps=[],
+            job=_format_job_out(job, detail=True),
+        )
+    # ─────────────────────────────────────────────────────────────────────
 
     rec = (
         db.query(Recommendation)

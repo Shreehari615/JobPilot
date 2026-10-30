@@ -197,38 +197,93 @@ class JoobleSource(BaseJobSource):
             logger.info("Jooble API not configured, skipping")
             return []
 
-        jobs = []
-        try:
-            data = self._fetch(s.JOOBLE_API_KEY, query or "software engineer", location or "India", 1)
-            results = data.get("jobs", [])
-            for r in results[:max_results]:
-                job = RawJob(
-                    external_id=r.get("id"),
-                    title=r.get("title", ""),
-                    company=r.get("company"),
-                    location=r.get("location"),
-                    description=r.get("snippet"),
-                    responsibilities=None,
-                    required_skills=[],
-                    experience_min=None,
-                    experience_max=None,
-                    education_required=None,
-                    salary_min=None,
-                    salary_max=None,
-                    salary_currency="INR",
-                    job_type=r.get("type"),
-                    work_mode=None,
-                    posted_date=datetime.fromisoformat(r["updated"]) if r.get("updated") else None,
-                    original_url=r.get("link", ""),
-                    source_name=self.name,
-                    is_seed_data=False,
+        jobs: List[RawJob] = []
+        pages_needed = max(1, (max_results + 19) // 20)
+
+        for page in range(1, pages_needed + 1):
+            try:
+                data = self._fetch(
+                    s.JOOBLE_API_KEY,
+                    query or "software engineer",
+                    location or "India",
+                    page,
                 )
-                jobs.append(job)
-        except Exception as e:
-            logger.error(f"Jooble API error: {e}")
+                results = data.get("jobs", [])
+                if not results:
+                    break
+
+                for r in results:
+                    # Safe date parsing
+                    posted_date = None
+                    raw_updated = r.get("updated")
+                    if raw_updated:
+                        try:
+                            # Handle formats like 2026-09-20T00:00:00.0000000
+                            clean_updated = raw_updated.replace("Z", "+00:00")
+                            if "." in clean_updated:
+                                head, tail = clean_updated.split(".", 1)
+                                if "+" in tail:
+                                    micro, tz = tail.split("+", 1)
+                                    clean_updated = f"{head}.{micro[:6]}+{tz}"
+                                elif "-" in tail:
+                                    micro, tz = tail.split("-", 1)
+                                    clean_updated = f"{head}.{micro[:6]}-{tz}"
+                                else:
+                                    clean_updated = f"{head}.{tail[:6]}"
+                            posted_date = datetime.fromisoformat(clean_updated)
+                        except Exception:
+                            posted_date = None
+
+                    # Infer work mode
+                    title_text = (r.get("title") or "").lower()
+                    snippet_text = (r.get("snippet") or "").lower()
+                    if "remote" in title_text or "remote" in snippet_text:
+                        work_mode = "remote"
+                    elif "hybrid" in title_text or "hybrid" in snippet_text:
+                        work_mode = "hybrid"
+                    else:
+                        work_mode = None
+
+                    # Strip basic HTML tags from snippet if present
+                    snippet = r.get("snippet", "")
+                    if snippet and ("&" in snippet or "<" in snippet):
+                        import re
+                        snippet = re.sub(r"<[^>]+>", " ", snippet)
+                        snippet = " ".join(snippet.split())
+
+                    job = RawJob(
+                        external_id=str(r.get("id")) if r.get("id") else None,
+                        title=r.get("title", "").strip(),
+                        company=r.get("company", "").strip() if r.get("company") else None,
+                        location=r.get("location"),
+                        description=snippet,
+                        responsibilities=None,
+                        required_skills=[],
+                        experience_min=None,
+                        experience_max=None,
+                        education_required=None,
+                        salary_min=None,
+                        salary_max=None,
+                        salary_currency="INR",
+                        job_type=r.get("type"),
+                        work_mode=work_mode,
+                        posted_date=posted_date,
+                        original_url=r.get("link", ""),
+                        source_name=self.name,
+                        is_seed_data=False,
+                    )
+                    jobs.append(job)
+
+                if len(jobs) >= max_results:
+                    break
+                time.sleep(0.3)
+
+            except Exception as e:
+                logger.error(f"Jooble API error on page {page}: {e}")
+                break
 
         logger.info(f"Jooble: collected {len(jobs)} jobs")
-        return jobs
+        return jobs[:max_results]
 
 
 class RemotiveSource(BaseJobSource):

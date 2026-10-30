@@ -3,6 +3,7 @@ from app.models.models import (
     CandidateSkill, CandidateExperience, CandidateEducation,
     Job, JobSkill, JobSource, JobDuplicate,
     Recommendation, SkillGap, SavedJob, ApplicationInteraction,
+    EmailOTP,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "CandidateSkill", "CandidateExperience", "CandidateEducation",
     "Job", "JobSkill", "JobSource", "JobDuplicate",
     "Recommendation", "SkillGap", "SavedJob", "ApplicationInteraction",
+    "EmailOTP",
 ]

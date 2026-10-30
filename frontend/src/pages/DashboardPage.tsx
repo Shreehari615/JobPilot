@@ -135,12 +135,14 @@ export const DashboardPage: React.FC = () => {
         <div className="p-5 rounded-2xl glass-panel border border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-400 font-medium block">Highest Match</span>
-            <div className="text-2xl font-extrabold text-emerald-400 mt-1">
-              {topMatch > 0 ? `${topMatch}%` : 'N/A'}
+            <div className={`text-2xl font-extrabold mt-1 ${hasResume ? 'text-emerald-400' : 'text-slate-600'}`}>
+              {hasResume && topMatch > 0 ? `${topMatch}%` : '--'}
             </div>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">Top role alignment</span>
+            <span className="text-[11px] text-slate-500 mt-0.5 block">
+              {hasResume ? 'Top role alignment' : 'Upload resume to unlock'}
+            </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${hasResume ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-600'}`}>
             <Award className="w-6 h-6" />
           </div>
         </div>
@@ -148,12 +150,14 @@ export const DashboardPage: React.FC = () => {
         <div className="p-5 rounded-2xl glass-panel border border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-400 font-medium block">Recommendations</span>
-            <div className="text-2xl font-extrabold text-indigo-400 mt-1">
-              {recommendations.length}
+            <div className={`text-2xl font-extrabold mt-1 ${hasResume ? 'text-indigo-400' : 'text-slate-600'}`}>
+              {hasResume ? recommendations.length : '--'}
             </div>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">Ranked by algorithm</span>
+            <span className="text-[11px] text-slate-500 mt-0.5 block">
+              {hasResume ? 'Ranked by algorithm' : 'Upload resume to unlock'}
+            </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${hasResume ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-800 text-slate-600'}`}>
             <Sparkles className="w-6 h-6" />
           </div>
         </div>
@@ -172,12 +176,14 @@ export const DashboardPage: React.FC = () => {
         <div className="p-5 rounded-2xl glass-panel border border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-400 font-medium block">Average Match</span>
-            <div className="text-2xl font-extrabold text-blue-400 mt-1">
-              {avgMatch > 0 ? `${avgMatch}%` : 'N/A'}
+            <div className={`text-2xl font-extrabold mt-1 ${hasResume ? 'text-blue-400' : 'text-slate-600'}`}>
+              {hasResume && avgMatch > 0 ? `${avgMatch}%` : '--'}
             </div>
-            <span className="text-[11px] text-slate-500 mt-0.5 block">Across top 20 postings</span>
+            <span className="text-[11px] text-slate-500 mt-0.5 block">
+              {hasResume ? 'Across top 20 postings' : 'Upload resume to unlock'}
+            </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${hasResume ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-800 text-slate-600'}`}>
             <TrendingUp className="w-6 h-6" />
           </div>
         </div>
@@ -238,7 +244,8 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Action card */}
+        {/* Action card — Skill Gap hidden */}
+        {false && (
         <div className="p-6 rounded-2xl glass-panel border border-slate-800 flex flex-col justify-between bg-gradient-to-br from-slate-900 to-indigo-950/20">
           <div>
             <div className="flex items-center gap-2 text-indigo-400 mb-3">
@@ -271,6 +278,7 @@ export const DashboardPage: React.FC = () => {
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+        )}
       </div>
 
       {/* Top Recommendations Feed */}
@@ -294,33 +302,79 @@ export const DashboardPage: React.FC = () => {
           </Link>
         </div>
 
-        {recommendations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recommendations.slice(0, 4).map((rec) => (
-              <JobCard
-                key={rec.id}
-                job={rec.job}
-                matchScore={rec.overall_score}
-                explanation={rec.explanation}
-              />
-            ))}
-          </div>
+        {hasResume ? (
+          recommendations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {recommendations.slice(0, 4).map((rec) => (
+                <JobCard
+                  key={rec.id}
+                  job={rec.job}
+                  matchScore={rec.overall_score}
+                  explanation={rec.explanation}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center rounded-2xl glass-panel border border-slate-800">
+              <Flame className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-white">Computing your matches…</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto mb-4">
+                Your resume was parsed. Click <strong>Recalculate AI Matches</strong> to generate
+                your personalised rankings.
+              </p>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl gradient-bg font-semibold text-xs text-white shadow-md shadow-indigo-600/30 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                Recalculate Now
+              </button>
+            </div>
+          )
         ) : (
-          <div className="p-12 text-center rounded-2xl glass-panel border border-slate-800">
-            <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-white">No recommendations yet</h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto mb-4">
-              Upload your resume so our NLP pipeline can extract your skills and calculate matching
-              scores against active job postings.
-            </p>
-            <Link
-              to="/resume"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl gradient-bg font-semibold text-xs text-white shadow-md shadow-indigo-600/30"
-            >
-              Upload Resume Now
-            </Link>
+          /* ── Locked state — no resume ───────────────────────────────── */
+          <div className="relative rounded-2xl border border-slate-700/60 overflow-hidden">
+            {/* Blurred mock cards behind the gate */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 blur-sm pointer-events-none select-none opacity-40">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-36 rounded-xl bg-slate-800/80 border border-slate-700 animate-pulse" />
+              ))}
+            </div>
+
+            {/* Overlay gate */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm px-6 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mb-4">
+                <Sparkles className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-1">AI Matching is Locked</h3>
+              <p className="text-sm text-slate-400 max-w-sm mb-5">
+                Upload your resume so our NLP pipeline can extract your skills and compute
+                real, personalised match scores against active job postings.
+              </p>
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                <Link
+                  to="/resume"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-bg font-bold text-sm text-white shadow-lg shadow-indigo-600/30 hover:opacity-90 transition"
+                >
+                  <FileText className="w-4 h-4" />
+                  Upload Resume
+                </Link>
+                <Link
+                  to="/jobs"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-sm text-slate-200 border border-slate-700 transition"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Browse Jobs
+                </Link>
+              </div>
+              <p className="text-[11px] text-slate-600 mt-4">
+                Scores are computed using a 5-factor NLP model · Skills · Semantics · Experience · Education · Preferences
+              </p>
+            </div>
           </div>
         )}
+
       </div>
     </div>
   );

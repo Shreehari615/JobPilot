@@ -41,6 +41,15 @@ class Settings(BaseSettings):
             return [x.strip() for x in v.split(",") if x.strip()]
         return v
 
+    # ── Email / SMTP ───────────────────────────────────────────────────
+    EMAIL_HOST: str = "smtp.gmail.com"
+    EMAIL_PORT: int = 587
+    EMAIL_USE_TLS: bool = True
+    EMAIL_HOST_USER: str = ""
+    EMAIL_HOST_PASSWORD: str = ""
+    OTP_EXPIRY_MINUTES: int = 10
+    RESET_TOKEN_EXPIRY_HOURS: int = 1
+
     # ── File Upload ───────────────────────────────────────────────────
     MAX_RESUME_SIZE_MB: int = 10
     UPLOAD_DIR: str = "uploads/resumes"

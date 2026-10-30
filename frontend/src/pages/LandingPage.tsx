@@ -26,38 +26,38 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="relative pt-20 pb-28 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-8 animate-fade-in shadow-lg shadow-indigo-500/10">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>State-of-the-Art MCA Academic Research Project</span>
-          </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-none">
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none" style={{ color: 'var(--color-text)' }}>
             Unified AI Job Discovery & <span className="gradient-text">Smart Application</span> Assistant
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-6 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
             Eliminate random job boards. JobPilot AI parses your resume with NLP, calculates
             transparent 5-factor compatibility scores, and pinpoints exact skill gaps for every role.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              to={isAuthenticated ? '/dashboard' : '/register'}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-base bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 flex items-center justify-center gap-2"
+              to={isAuthenticated ? '/jobs' : '/login'}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-base text-white gradient-bg flex items-center justify-center gap-2 transition hover:opacity-90 hover:scale-105"
+              style={{ boxShadow: '0 4px 16px rgba(19,102,214,0.28)' }}
             >
-              <span>{isAuthenticated ? 'Enter Dashboard' : 'Get Started Free'}</span>
+              <span>{isAuthenticated ? 'Explore Jobs' : 'Get Started Free'}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/jobs"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-base bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition hover:opacity-90"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', color: 'var(--color-text-secondary)', boxShadow: 'var(--shadow-sm)' }}
             >
-              <Search className="w-4 h-4 text-indigo-400" />
+              <Search className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
               <span>Explore Active Jobs</span>
             </Link>
           </div>
 
-          {/* Metrics summary bar */}
+          {/* ── WEEK-2 DEMO: Metrics summary bar — hidden ──────────────── */}
+          {false && (
           <div className="mt-16 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: 'Skills in Taxonomy', value: '700+' },
@@ -74,10 +74,12 @@ export const LandingPage: React.FC = () => {
               </div>
             ))}
           </div>
+          )}
         </div>
       </section>
 
-      {/* How It Works Pipeline */}
+      {/* ── WEEK-2 DEMO: How It Works Pipeline — hidden ──────────────── */}
+      {false && (
       <section className="py-20 border-t border-slate-800/80 bg-slate-950/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -144,8 +146,10 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Highlights Section */}
+      {/* ── WEEK-2 DEMO: Highlights Section — hidden ──────────────────── */}
+      {false && (
       <section className="py-20 border-t border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -190,12 +194,15 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Footer */}
+      {/* ── WEEK-2 DEMO: Footer — hidden ────────────────────────────── */}
+      {false && (
       <footer className="mt-auto py-8 border-t border-slate-900 bg-slate-950 text-center text-xs text-slate-500">
-        <p>JobPilot AI — Unified AI Job Discovery & Application Assistant (MCA Academic Project).</p>
+        <p>JobPilot AI — Unified AI Job Discovery & Application Assistant.</p>
         <p className="mt-1">Powered by FastAPI, PyTorch, sentence-transformers, React, and PostgreSQL.</p>
       </footer>
+      )}
     </div>
   );
 };

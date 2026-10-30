@@ -49,3 +49,49 @@ def test_extract_skills_from_text():
 def test_related_skills():
     related = get_related_skills("React")
     assert any("Vue.js" in r or "Angular" in r or "Svelte" in r for r in related)
+
+
+def test_prevent_false_positive_skill_extraction():
+    """Ensure substring matches don't falsely extract skills."""
+    prose = """
+    MCA student with experience in building scalable applications and secure data storage.
+    Engineered a responsive multi-device interface.
+    Studied algorithms, data structures, and computer science at S R N M N College.
+    Worked on several projects and datasets.
+    Taking rest after the exam.
+    """
+    extracted = extract_skills_from_text(prose)
+    # None of these false positives should be extracted from substrings
+    assert "Gin" not in extracted, "Gin should not match 'engineered'"
+    assert "Go" not in extracted, "Go should not match 'algorithms'"
+    assert "R" not in extracted, "R should not match 'S R N M N College'"
+    assert "RAG" not in extracted, "RAG should not match 'storage'"
+    assert "Scala" not in extracted, "Scala should not match 'scalable'"
+    assert "TypeScript" not in extracted, "TypeScript should not match 'projects'"
+
+    # Real skills mentioned in prose should be extracted
+    assert "Data Structures" in extracted
+    assert "Algorithms" in extracted
+
+
+def test_extract_special_syntax_skills():
+    """Ensure C, C++, C#, CI/CD, REST APIs, YOLO are accurately extracted."""
+    text = """
+    Technical Skills:
+    Programming Languages: Python, Java, C (Basic), C++, C#
+    Database: SQL, Oracle, DBMS
+    Concepts: Object-Oriented Programming (OOP), SDLC, Agile
+    Projects: YOLO object detection, CI/CD integration, REST APIs, Tailwind CSS
+    """
+    extracted = extract_skills_from_text(text)
+    assert "C" in extracted
+    assert "C++" in extracted
+    assert "C#" in extracted
+    assert "CI/CD" in extracted
+    assert "REST API" in extracted
+    assert "YOLO" in extracted
+    assert "DBMS" in extracted
+    assert "Object-Oriented Programming" in extracted
+    assert "SDLC" in extracted
+    assert "Tailwind CSS" in extracted
+

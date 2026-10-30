@@ -44,10 +44,41 @@ class UserOut(BaseModel):
     email: str
     is_active: bool
     is_admin: bool
+    is_email_verified: bool = False
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# OTP / Email-verification schemas
+class SendOTPRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -122,7 +153,7 @@ class ResumeAnalysisOut(BaseModel):
     total_experience_years: float = 0.0
     job_titles: List[str] = []
     certifications: List[str] = []
-    projects: List[str] = []
+    projects: List[Any] = []
     summary: Optional[str] = None
 
 

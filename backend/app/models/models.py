@@ -3,7 +3,7 @@ All SQLAlchemy ORM models for JobPilot AI.
 Tables: users, profiles, user_preferences, resumes, candidate_skills,
         candidate_experiences, candidate_education, jobs, job_skills,
         job_sources, job_duplicates, recommendations, skill_gaps,
-        saved_jobs, application_interactions
+        saved_jobs, application_interactions, email_otps
 """
 from __future__ import annotations
 
@@ -38,6 +38,9 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+    is_email_verified = Column(Boolean, default=False)
+    password_reset_token = Column(String(64), nullable=True, index=True)
+    password_reset_expires = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -51,6 +54,19 @@ class User(Base):
     recommendations = relationship("Recommendation", back_populates="user")
     saved_jobs = relationship("SavedJob", back_populates="user")
     interactions = relationship("ApplicationInteraction", back_populates="user")
+
+
+
+# ── Email OTP ─────────────────────────────────────────────────────────
+class EmailOTP(Base):
+    __tablename__ = "email_otps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    otp = Column(String(6), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_used = Column(Boolean, default=False)
 
 
 # ── Profiles ──────────────────────────────────────────────────────────

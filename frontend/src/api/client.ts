@@ -30,18 +30,31 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Intercept 401s
+// Intercept 401s and unauthenticated 403s
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // If token expired, clear
+    const isUnauth =
+      error.response?.status === 401 ||
+      (error.response?.status === 403 &&
+        (error.response?.data?.detail === 'Not authenticated' ||
+          error.response?.data?.detail === 'Invalid or expired token'));
+
+    if (isUnauth) {
       localStorage.removeItem('jobpilot_token');
       localStorage.removeItem('jobpilot_user');
+      if (
+        typeof window !== 'undefined' &&
+        !window.location.pathname.includes('/login') &&
+        !window.location.pathname.includes('/register')
+      ) {
+        window.location.href = '/login?expired=true';
+      }
     }
     return Promise.reject(error);
   }
 );
+
 
 export const api = {
   // ── Auth ────────────────────────────────────────────────────────────
@@ -55,6 +68,22 @@ export const api = {
   },
   getCurrentUser: async (): Promise<User> => {
     const res = await apiClient.get('/auth/me');
+    return res.data;
+  },
+  sendOTP: async (email: string) => {
+    const res = await apiClient.post('/auth/send-otp', { email });
+    return res.data;
+  },
+  verifyOTP: async (email: string, otp: string) => {
+    const res = await apiClient.post('/auth/verify-otp', { email, otp });
+    return res.data;
+  },
+  forgotPassword: async (email: string) => {
+    const res = await apiClient.post('/auth/forgot-password', { email });
+    return res.data;
+  },
+  resetPassword: async (token: string, new_password: string) => {
+    const res = await apiClient.post('/auth/reset-password', { token, new_password });
     return res.data;
   },
 
@@ -80,21 +109,40 @@ export const api = {
   uploadResume: async (file: File): Promise<Resume> => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await apiClient.post('/resumes/upload', formData, {
+    const res = await apiClient.post('/resume/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return res.data;
   },
   getResumes: async (): Promise<Resume[]> => {
-    const res = await apiClient.get('/resumes');
-    return res.data;
+    try {
+      const res = await apiClient.get('/resume/list');
+      if (Array.isArray(res.data)) return res.data;
+      return res.data ? [res.data] : [];
+    } catch {
+      try {
+        const res = await apiClient.get('/resume');
+        return res.data ? [res.data] : [];
+      } catch {
+        return [];
+      }
+    }
   },
-  getResumeAnalysis: async (resumeId: number): Promise<ResumeAnalysis> => {
-    const res = await apiClient.get(`/resumes/${resumeId}/analysis`);
+  getResumeAnalysis: async (resumeId?: number): Promise<ResumeAnalysis> => {
+    const url = resumeId ? `/resume/${resumeId}/analysis` : '/resume/analysis';
+    const res = await apiClient.get(url);
     return res.data;
   },
   getLatestAnalysis: async (): Promise<ResumeAnalysis | null> => {
-    const res = await apiClient.get('/resumes/latest/analysis');
+    const res = await apiClient.get('/resume/analysis');
+    return res.data;
+  },
+  analyzeResume: async (): Promise<ResumeAnalysis> => {
+    const res = await apiClient.post('/resume/analyze');
+    return res.data;
+  },
+  deleteResume: async () => {
+    const res = await apiClient.delete('/resume');
     return res.data;
   },
 

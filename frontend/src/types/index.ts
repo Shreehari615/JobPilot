@@ -122,18 +122,34 @@ export interface Resume {
   created_at: string;
 }
 
+export interface ResumeProject {
+  title: string;
+  description?: string;
+  highlights?: string[];
+  skills?: string[];
+}
+
+export interface ResumeEducation {
+  degree?: string;
+  institution?: string;
+  year?: string | number;
+  graduation_year?: number;
+  grade?: string;
+  field_of_study?: string;
+}
+
 export interface ResumeAnalysis {
   resume_id: number;
   name?: string;
   email?: string;
   phone?: string;
   skills: string[];
-  education: Array<{ degree?: string; institution?: string; year?: number }>;
-  experience: Array<{ title?: string; company?: string; duration?: string }>;
+  education: ResumeEducation[];
+  experience: Array<{ title?: string; company?: string; duration?: string; job_title?: string; start?: string; end?: string; description?: string }>;
   total_experience_years: number;
   job_titles: string[];
   certifications: string[];
-  projects: string[];
+  projects: Array<string | ResumeProject>;
   summary?: string;
 }
 
