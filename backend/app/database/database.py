@@ -10,13 +10,17 @@ from app.config import get_settings
 
 settings = get_settings()
 
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 engine_kwargs = {"pool_pre_ping": True, "echo": settings.DEBUG, "connect_args": connect_args}
-if not settings.DATABASE_URL.startswith("sqlite"):
+if not db_url.startswith("sqlite"):
     engine_kwargs.update({"pool_size": 10, "max_overflow": 20})
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     **engine_kwargs,
 )
 
