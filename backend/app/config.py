@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_FROM: str = "JobPilot AI <onboarding@resend.dev>"
     BREVO_API_KEY: str = ""
-    BREVO_SENDER: str = ""
+    BREVO_SENDER: str = "bhatsv160@gmail.com"
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
     EMAIL_USE_TLS: bool = True
