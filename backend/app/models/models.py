@@ -223,8 +223,8 @@ class Job(Base):
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)
     salary_currency = Column(String(10), default="INR")
-    job_type = Column(String(30), nullable=True, index=True)    # full-time/part-time/contract/internship
-    work_mode = Column(String(20), nullable=True)               # remote/hybrid/onsite
+    job_type = Column(String(100), nullable=True, index=True)    # full-time/part-time/contract/internship
+    work_mode = Column(String(50), nullable=True)               # remote/hybrid/onsite
     experience_min = Column(Float, nullable=True)
     experience_max = Column(Float, nullable=True)
     education_required = Column(String(100), nullable=True)

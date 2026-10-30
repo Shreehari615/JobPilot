@@ -1,3 +1,13 @@
-
 .env
 backend/.env
+__pycache__/
+*.pyc
+*.pyo
+venv/
+backend/venv/
+*.db
+backend/*.db
+node_modules/
+frontend/dist/
+uploads/
+backend/uploads/
