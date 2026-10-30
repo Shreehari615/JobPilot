@@ -101,6 +101,16 @@ for prefix in ["/api/v1", "/api"]:
 if os.path.exists(settings.UPLOAD_DIR):
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
+@app.get("/", tags=["Root"])
+def root():
+    """Root entry point."""
+    return {
+        "message": "Welcome to JobPilot AI Backend API",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "health": "/health",
+    }
+
 
 @app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
