@@ -102,6 +102,8 @@ if os.path.exists(settings.UPLOAD_DIR):
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 @app.get("/", tags=["Root"])
+@app.get("/api", tags=["Root"])
+@app.get("/api/v1", tags=["Root"])
 def root():
     """Root entry point."""
     return {
@@ -109,6 +111,16 @@ def root():
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/health",
+        "api_v1_health": "/api/v1/health",
+        "endpoints": {
+            "jobs": "/api/v1/jobs",
+            "auth": "/api/v1/auth",
+            "profile": "/api/v1/profile",
+            "resume": "/api/v1/resume",
+            "recommendations": "/api/v1/recommendations",
+            "skills": "/api/v1/skills",
+            "admin": "/api/v1/admin"
+        }
     }
 
 
